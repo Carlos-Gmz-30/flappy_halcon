@@ -22,6 +22,14 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    const MAX_LEVEL = 10;
+    const obstacleTypes = [
+      { color: '#FF5555', label: 'Examen' },
+      { color: '#999999', label: 'Celular' },
+      { color: '#F4A460', label: 'Cerveza' },
+      { color: '#9932CC', label: 'IA' }
+    ];
+
     let halcon = {
       x: 80,
       y: 150,
@@ -42,21 +50,31 @@
     let isGameOver = false;
 
     function drawHalcon() {
-      ctx.fillStyle = "#FFD700";
+      ctx.fillStyle = '#FFD700';
       ctx.fillRect(halcon.x, halcon.y, halcon.width, halcon.height);
     }
 
     function drawObstacle(obstacle) {
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = obstacle.type.color;
       ctx.fillRect(obstacle.x, 0, obstacle.width, obstacle.top);
       ctx.fillRect(obstacle.x, canvas.height - obstacle.bottom, obstacle.width, obstacle.bottom);
+      ctx.fillStyle = 'white';
+      ctx.font = '12px Arial';
+      ctx.fillText(obstacle.type.label, obstacle.x + 5, obstacle.top - 5);
     }
 
     function drawBonus(bonus) {
-      ctx.fillStyle = "#00FF00";
+      ctx.fillStyle = '#00FF00';
       ctx.beginPath();
       ctx.arc(bonus.x, bonus.y, bonus.radius, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    function drawBuilding() {
+      ctx.fillStyle = '#093565';
+      ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText('Docencias', 10, canvas.height - 10);
     }
 
     function update() {
@@ -65,9 +83,18 @@
       halcon.velocity += halcon.gravity;
       halcon.y += halcon.velocity;
 
-      if (halcon.energy > 0 && keys["ArrowRight"]) {
-        halcon.x += 3;
+      let baseSpeed = 2 + level * 0.5;
+      let boost = 0;
+      if (halcon.energy > 0 && keys['ArrowRight']) {
+        boost = 2;
         halcon.energy -= 0.5;
+      } else {
+        halcon.energy = Math.min(100, halcon.energy + 0.1);
+      }
+
+      if ((keys[' '] || keys['ArrowUp']) && halcon.energy > 0) {
+        halcon.velocity = halcon.lift;
+        halcon.energy -= 1;
       }
 
       if (halcon.y + halcon.height > canvas.height || halcon.y < 0) {
@@ -76,26 +103,28 @@
 
       if (frame % 100 === 0) {
         let gap = 140 - level * 10;
+        if (gap < 60) gap = 60;
         let topHeight = Math.floor(Math.random() * (canvas.height - gap - 100)) + 20;
         let bottomHeight = canvas.height - topHeight - gap;
         obstacles.push({
           x: canvas.width,
           width: 60,
           top: topHeight,
-          bottom: bottomHeight
+          bottom: bottomHeight,
+          type: obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
         });
       }
 
       if (frame % 250 === 0) {
         bonusItems.push({
           x: canvas.width,
-          y: Math.random() * canvas.height,
+          y: Math.random() * (canvas.height - 100) + 50,
           radius: 10
         });
       }
 
       obstacles.forEach((obstacle, index) => {
-        obstacle.x -= 2 + level * 0.5;
+        obstacle.x -= baseSpeed + boost;
         if (
           halcon.x < obstacle.x + obstacle.width &&
           halcon.x + halcon.width > obstacle.x &&
@@ -106,12 +135,12 @@
         if (obstacle.x + obstacle.width < 0) {
           obstacles.splice(index, 1);
           halcon.score++;
-          if (halcon.score % 5 === 0) level++;
+          if (halcon.score % 5 === 0 && level < MAX_LEVEL) level++;
         }
       });
 
       bonusItems.forEach((bonus, index) => {
-        bonus.x -= 2;
+        bonus.x -= baseSpeed + boost;
         if (
           halcon.x < bonus.x + bonus.radius &&
           halcon.x + halcon.width > bonus.x - bonus.radius &&
@@ -131,22 +160,23 @@
       halcon.velocity = 0;
       if (halcon.lives <= 0) {
         isGameOver = true;
-        alert("¡Game Over! Puntuación: " + halcon.score);
+        alert('¡Game Over! Puntuación: ' + halcon.score);
         location.reload();
       }
     }
 
     function drawUI() {
-      ctx.fillStyle = "white";
-      ctx.font = "16px Arial";
-      ctx.fillText("Vidas: " + halcon.lives, 10, 20);
-      ctx.fillText("Energía: " + Math.floor(halcon.energy), 10, 40);
-      ctx.fillText("Nivel: " + level, 10, 60);
-      ctx.fillText("Puntos: " + halcon.score, 10, 80);
+      ctx.fillStyle = 'white';
+      ctx.font = '16px Arial';
+      ctx.fillText('Vidas: ' + halcon.lives, 10, 20);
+      ctx.fillText('Energía: ' + Math.floor(halcon.energy), 10, 40);
+      ctx.fillText('Nivel: ' + level, 10, 60);
+      ctx.fillText('Puntos: ' + halcon.score, 10, 80);
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBuilding();
       drawHalcon();
       obstacles.forEach(drawObstacle);
       bonusItems.forEach(drawBonus);
@@ -161,11 +191,12 @@
     }
 
     const keys = {};
-    window.addEventListener("keydown", e => {
+    window.addEventListener('keydown', e => {
       keys[e.key] = true;
-      if (e.key === " " || e.key === "ArrowUp") halcon.velocity = halcon.lift;
     });
-    window.addEventListener("keyup", e => keys[e.key] = false);
+    window.addEventListener('keyup', e => {
+      keys[e.key] = false;
+    });
 
     gameLoop();
   </script>
