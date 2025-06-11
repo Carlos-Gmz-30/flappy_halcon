@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>FlappyHalcon</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #199779;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: linear-gradient(#093565, #199779);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let halcon = {
+      x: 80,
+      y: 150,
+      width: 40,
+      height: 40,
+      gravity: 1.5,
+      lift: -20,
+      velocity: 0,
+      energy: 100,
+      lives: 3,
+      score: 0,
+    };
+
+    let obstacles = [];
+    let bonusItems = [];
+    let level = 1;
+    let frame = 0;
+    let isGameOver = false;
+
+    function drawHalcon() {
+      ctx.fillStyle = "#FFD700";
+      ctx.fillRect(halcon.x, halcon.y, halcon.width, halcon.height);
+    }
+
+    function drawObstacle(obstacle) {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(obstacle.x, 0, obstacle.width, obstacle.top);
+      ctx.fillRect(obstacle.x, canvas.height - obstacle.bottom, obstacle.width, obstacle.bottom);
+    }
+
+    function drawBonus(bonus) {
+      ctx.fillStyle = "#00FF00";
+      ctx.beginPath();
+      ctx.arc(bonus.x, bonus.y, bonus.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function update() {
+      if (isGameOver) return;
+
+      halcon.velocity += halcon.gravity;
+      halcon.y += halcon.velocity;
+
+      if (halcon.energy > 0 && keys["ArrowRight"]) {
+        halcon.x += 3;
+        halcon.energy -= 0.5;
+      }
+
+      if (halcon.y + halcon.height > canvas.height || halcon.y < 0) {
+        loseLife();
+      }
+
+      if (frame % 100 === 0) {
+        let gap = 140 - level * 10;
+        let topHeight = Math.floor(Math.random() * (canvas.height - gap - 100)) + 20;
+        let bottomHeight = canvas.height - topHeight - gap;
+        obstacles.push({
+          x: canvas.width,
+          width: 60,
+          top: topHeight,
+          bottom: bottomHeight
+        });
+      }
+
+      if (frame % 250 === 0) {
+        bonusItems.push({
+          x: canvas.width,
+          y: Math.random() * canvas.height,
+          radius: 10
+        });
+      }
+
+      obstacles.forEach((obstacle, index) => {
+        obstacle.x -= 2 + level * 0.5;
+        if (
+          halcon.x < obstacle.x + obstacle.width &&
+          halcon.x + halcon.width > obstacle.x &&
+          (halcon.y < obstacle.top || halcon.y + halcon.height > canvas.height - obstacle.bottom)
+        ) {
+          loseLife();
+        }
+        if (obstacle.x + obstacle.width < 0) {
+          obstacles.splice(index, 1);
+          halcon.score++;
+          if (halcon.score % 5 === 0) level++;
+        }
+      });
+
+      bonusItems.forEach((bonus, index) => {
+        bonus.x -= 2;
+        if (
+          halcon.x < bonus.x + bonus.radius &&
+          halcon.x + halcon.width > bonus.x - bonus.radius &&
+          halcon.y < bonus.y + bonus.radius &&
+          halcon.y + halcon.height > bonus.y - bonus.radius
+        ) {
+          halcon.energy = Math.min(100, halcon.energy + 20);
+          halcon.lives = Math.min(5, halcon.lives + 1);
+          bonusItems.splice(index, 1);
+        }
+      });
+    }
+
+    function loseLife() {
+      halcon.lives--;
+      halcon.y = 150;
+      halcon.velocity = 0;
+      if (halcon.lives <= 0) {
+        isGameOver = true;
+        alert("¡Game Over! Puntuación: " + halcon.score);
+        location.reload();
+      }
+    }
+
+    function drawUI() {
+      ctx.fillStyle = "white";
+      ctx.font = "16px Arial";
+      ctx.fillText("Vidas: " + halcon.lives, 10, 20);
+      ctx.fillText("Energía: " + Math.floor(halcon.energy), 10, 40);
+      ctx.fillText("Nivel: " + level, 10, 60);
+      ctx.fillText("Puntos: " + halcon.score, 10, 80);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawHalcon();
+      obstacles.forEach(drawObstacle);
+      bonusItems.forEach(drawBonus);
+      drawUI();
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      frame++;
+      requestAnimationFrame(gameLoop);
+    }
+
+    const keys = {};
+    window.addEventListener("keydown", e => {
+      keys[e.key] = true;
+      if (e.key === " " || e.key === "ArrowUp") halcon.velocity = halcon.lift;
+    });
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    gameLoop();
+  </script>
+</body>
+</html>
