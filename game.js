@@ -13,6 +13,8 @@ let pipes = [];
 let pipeGap = 150;
 let frame = 0;
 
+
+
 document.addEventListener("keydown", () => {
     if (energy > 0) {
         halconVelocity = jump;
@@ -49,6 +51,29 @@ function drawUI() {
     ctx.fillText(`Puntaje: ${score}`, 10, 60);
 }
 
+let loopId;
+
+function showGameOverModal() {
+    const modal = document.getElementById("gameOverModal");
+    const finalScore = document.getElementById("finalScore");
+    finalScore.textContent = "Puntaje: " + score;
+    modal.style.display = "flex";
+}
+
+function hideGameOverModal() {
+    document.getElementById("gameOverModal").style.display = "none";
+}
+
+function resetGame() {
+    halconY = canvas.height / 2;
+    halconVelocity = 0;
+    energy = 100;
+    lives = 3;
+    score = 0;
+    pipes = [];
+    frame = 0;
+}
+
 function update() {
     frame++;
     halconVelocity += gravity;
@@ -79,10 +104,18 @@ function update() {
         energy += 10;
     }
 
-    if (lives <= 0 || halconY > canvas.height || halconY < 0) {
-        alert("Juego terminado. Puntaje: " + score);
-        document.location.reload();
+    
+    if ((halconY > canvas.height || halconY < 0) && lives > 0) {
+        lives--;
+        halconY = canvas.height / 2;
+        halconVelocity = 0;
     }
+    
+    if (lives <= 0) {
+        showGameOverModal();
+        cancelAnimationFrame(loopId); // Stop the loop
+    }
+
 }
 
 function draw() {
@@ -93,9 +126,24 @@ function draw() {
 }
 
 function loop() {
+    
     update();
     draw();
-    requestAnimationFrame(loop);
+    loopId = requestAnimationFrame(loop);
 }
 
-loop();
+document.getElementById("playAgainBtn").onclick = function () {
+    hideGameOverModal();
+    resetGame();
+    //cancelAnimationFrame(loopId); // Ensure no previous loop is running
+    loop();
+};
+
+document.getElementById("startBtn").onclick = function () {
+    document.getElementById("startModal").style.display = "none";
+    resetGame();
+    loop();
+};
+
+
+

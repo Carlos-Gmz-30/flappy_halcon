@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flappy Halcón</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <div id="gameOverModal"
+    style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#fff; padding:30px; border-radius:10px; text-align:center;">
+      <h2>Juego terminado</h2>
+      <p id="finalScore"></p>
+      <button id="playAgainBtn">Jugar de nuevo</button>
+    </div>
+  </div>
+  <div id="startModal"
+    style="display:flex; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#fff; padding:30px; border-radius:10px; text-align:center;">
+      <h2>¡Bienvenido a Flappy Halcón!</h2>
+      <button id="startBtn">Comenzar</button>
+    </div>
+  </div>
   <script src="game.js"></script>
 </body>
+
 </html>
