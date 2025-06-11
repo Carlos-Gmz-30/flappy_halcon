@@ -1,7 +1,6 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Variables base
 let halconY = canvas.height / 2;
 let halconVelocity = 0;
 let gravity = 0.6;
@@ -10,7 +9,6 @@ let energy = 100;
 let lives = 3;
 let score = 0;
 
-// Obstáculos
 let pipes = [];
 let pipeGap = 150;
 let frame = 0;
@@ -22,12 +20,17 @@ document.addEventListener("keydown", () => {
     }
 });
 
+const halconImg = new Image();
+halconImg.src = "assets/images/Image.png";
+
 function drawHalcon() {
-    ctx.fillStyle = "#007e3a"; // Verde UTEZ
-    ctx.beginPath();
-    ctx.arc(60, halconY, 20, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.closePath();
+    if (halconImg.complete) {
+        ctx.drawImage(halconImg, 40, halconY - 20, 40, 40);
+    } else {
+        halconImg.onload = () => {
+            ctx.drawImage(halconImg, 40, halconY - 20, 40, 40);
+        };
+    }
 }
 
 function drawPipes() {
@@ -51,36 +54,31 @@ function update() {
     halconVelocity += gravity;
     halconY += halconVelocity;
 
-    // Crear tuberías
     if (frame % 100 === 0) {
         const top = Math.random() * 200 + 50;
         pipes.push({ x: canvas.width, top });
     }
 
-    // Mover tuberías y detectar colisión
     pipes = pipes.map(pipe => {
         pipe.x -= 2;
 
-        // Colisión
         if (
             60 + 20 > pipe.x && 60 - 20 < pipe.x + 40 &&
             (halconY - 20 < pipe.top || halconY + 20 > pipe.top + pipeGap)
         ) {
             lives--;
-            pipe.x = -100; // eliminarlo
+            pipe.x = -100;
         }
 
-        if (pipe.x + 40 < 0) score++; // sumar punto si pasa el tubo
+        if (pipe.x + 40 < 0) score++;
 
         return pipe;
     });
 
-    // Energía recuperable
-    if (frame % 200 === 0 && energy < 100) {
+    if (frame % 30 === 0 && energy < 100) {
         energy += 10;
     }
 
-    // Fin del juego
     if (lives <= 0 || halconY > canvas.height || halconY < 0) {
         alert("Juego terminado. Puntaje: " + score);
         document.location.reload();
