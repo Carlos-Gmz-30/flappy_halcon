@@ -8,19 +8,34 @@
       margin: 0;
       overflow: hidden;
       background-color: #199779;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #title {
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 10px 0;
     }
     canvas {
-      display: block;
-      margin: auto;
       background: linear-gradient(#093565, #199779);
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
+  <h1 id="title">Flappy Halcon</h1>
+  <canvas id="gameCanvas"></canvas>
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      const titleHeight = document.getElementById('title').offsetHeight;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - titleHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     const MAX_LEVEL = 10;
     const obstacleTypes = [
@@ -33,8 +48,8 @@
     let halcon = {
       x: 80,
       y: 150,
-      width: 40,
-      height: 40,
+      width: 30,
+      height: 30,
       gravity: 1.5,
       lift: -20,
       velocity: 0,
@@ -102,8 +117,8 @@
       }
 
       if (frame % 100 === 0) {
-        let gap = 140 - level * 10;
-        if (gap < 60) gap = 60;
+        let gap = 160 - level * 10;
+        if (gap < 80) gap = 80;
         let topHeight = Math.floor(Math.random() * (canvas.height - gap - 100)) + 20;
         let bottomHeight = canvas.height - topHeight - gap;
         obstacles.push({
@@ -156,8 +171,11 @@
 
     function loseLife() {
       halcon.lives--;
+      halcon.x = 80;
       halcon.y = 150;
       halcon.velocity = 0;
+      obstacles = [];
+      bonusItems = [];
       if (halcon.lives <= 0) {
         isGameOver = true;
         alert('¡Game Over! Puntuación: ' + halcon.score);
