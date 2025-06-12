@@ -51,59 +51,47 @@ class FlappyHalconGame {
 			{ type: "life", color: "#FF69B4", text: "❤️", name: "Vida Extra", effect: "life" },
 		]
 
-		this.initializeEventListeners()
-		this.initializeMenus()
-	}
+                this.buttons = {
+                        start: { x: this.canvas.width / 2 - 100, y: this.canvas.height / 2, width: 200, height: 40 },
+                        instructions: { x: this.canvas.width / 2 - 100, y: this.canvas.height / 2 + 60, width: 200, height: 40 },
+                        back: { x: this.canvas.width / 2 - 100, y: this.canvas.height - 70, width: 200, height: 40 },
+                        restart: { x: this.canvas.width / 2 - 100, y: this.canvas.height / 2 + 60, width: 200, height: 40 },
+                        mainMenu: { x: this.canvas.width / 2 - 100, y: this.canvas.height / 2 + 110, width: 200, height: 40 },
+                }
 
-	initializeEventListeners() {
-		// Controles del juego
-		document.addEventListener("keydown", (e) => {
-			if (e.code === "Space") {
-				e.preventDefault()
-				this.handleJump()
-			}
-		})
+                this.initializeEventListeners()
+                this.showMainMenu()
+                this.gameLoop()
+        }
 
-		this.canvas.addEventListener("click", () => {
-			this.handleJump()
-		})
+        initializeEventListeners() {
+                // Controles del juego
+                document.addEventListener("keydown", (e) => {
+                        if (e.code === "Space") {
+                                e.preventDefault()
+                                this.handleJump()
+                        }
+                })
 
-		// Menús
-		document.getElementById("startBtn").addEventListener("click", () => this.startGame())
-		document.getElementById("instructionsBtn").addEventListener("click", () => this.showInstructions())
-		document.getElementById("backBtn").addEventListener("click", () => this.showMainMenu())
-		document.getElementById("restartBtn").addEventListener("click", () => this.restartGame())
-		document.getElementById("mainMenuBtn").addEventListener("click", () => this.showMainMenu())
-	}
+                this.canvas.addEventListener("click", (e) => {
+                        this.handleCanvasClick(e)
+                })
+        }
 
-	initializeMenus() {
-		this.showMainMenu()
-	}
+        showMainMenu() {
+                this.gameState = "menu"
+                document.getElementById("gameHUD").classList.add("hidden")
+        }
 
-	showMainMenu() {
-		this.gameState = "menu"
-		document.getElementById("mainMenu").classList.remove("hidden")
-		document.getElementById("instructionsMenu").classList.add("hidden")
-		document.getElementById("gameCanvas").classList.add("hidden")
-		document.getElementById("gameHUD").classList.add("hidden")
-		document.getElementById("gameOverMenu").classList.add("hidden")
-	}
+        showInstructions() {
+                this.gameState = "instructions"
+        }
 
-	showInstructions() {
-		document.getElementById("mainMenu").classList.add("hidden")
-		document.getElementById("instructionsMenu").classList.remove("hidden")
-	}
-
-	startGame() {
-		this.gameState = "playing"
-		this.resetGame()
-		document.getElementById("mainMenu").classList.add("hidden")
-		document.getElementById("instructionsMenu").classList.add("hidden")
-		document.getElementById("gameCanvas").classList.remove("hidden")
-		document.getElementById("gameHUD").classList.remove("hidden")
-		document.getElementById("gameOverMenu").classList.add("hidden")
-		this.gameLoop()
-	}
+        startGame() {
+                this.gameState = "playing"
+                this.resetGame()
+                document.getElementById("gameHUD").classList.remove("hidden")
+        }
 
 	restartGame() {
 		this.startGame()
@@ -133,15 +121,28 @@ class FlappyHalconGame {
 		}
 	}
 
-	gameLoop() {
-		if (this.gameState !== "playing") return
+        gameLoop() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-		this.update()
-		this.render()
-		this.frameCount++
+                switch (this.gameState) {
+                        case "menu":
+                                this.renderMainMenu()
+                                break
+                        case "instructions":
+                                this.renderInstructionsScreen()
+                                break
+                        case "playing":
+                                this.update()
+                                this.render()
+                                break
+                        case "gameOver":
+                                this.renderGameOverScreen()
+                                break
+                }
 
-		requestAnimationFrame(() => this.gameLoop())
-	}
+                this.frameCount++
+                requestAnimationFrame(() => this.gameLoop())
+        }
 
 	update() {
 		// Actualizar halcón
@@ -321,26 +322,19 @@ class FlappyHalconGame {
 		document.getElementById("energyFill").style.width = this.energy + "%"
 	}
 
-	gameOver() {
-		this.gameState = "gameOver"
-		document.getElementById("finalScore").textContent = this.score
-		document.getElementById("finalLevel").textContent = this.level
+        gameOver() {
+                this.gameState = "gameOver"
+                document.getElementById("gameHUD").classList.add("hidden")
 
-		// Mensaje motivacional basado en el rendimiento
-		const messages = [
-			"¡El esfuerzo siempre da frutos en la UTEZ!",
-			"¡Cada intento te acerca más al éxito académico!",
-			"¡La perseverancia es clave en tu formación UTEZ!",
-			"¡Sigue volando alto, futuro profesionista!",
-			"¡El conocimiento se construye paso a paso!",
-		]
-
-		document.getElementById("motivationalMessage").textContent = messages[Math.floor(Math.random() * messages.length)]
-
-		document.getElementById("gameCanvas").classList.add("hidden")
-		document.getElementById("gameHUD").classList.add("hidden")
-		document.getElementById("gameOverMenu").classList.remove("hidden")
-	}
+                const messages = [
+                        "¡El esfuerzo siempre da frutos en la UTEZ!",
+                        "¡Cada intento te acerca más al éxito académico!",
+                        "¡La perseverancia es clave en tu formación UTEZ!",
+                        "¡Sigue volando alto, futuro profesionista!",
+                        "¡El conocimiento se construye paso a paso!",
+                ]
+                this.motivationalMessage = messages[Math.floor(Math.random() * messages.length)]
+        }
 
 	render() {
 		// Limpiar canvas
@@ -438,12 +432,108 @@ class FlappyHalconGame {
 		this.ctx.shadowBlur = 0
 	}
 
-	renderParticle(particle) {
-		this.ctx.fillStyle = particle.color
-		this.ctx.globalAlpha = particle.life / 30
-		this.ctx.fillRect(particle.x, particle.y, 3, 3)
-		this.ctx.globalAlpha = 1
-	}
+        renderParticle(particle) {
+                this.ctx.fillStyle = particle.color
+                this.ctx.globalAlpha = particle.life / 30
+                this.ctx.fillRect(particle.x, particle.y, 3, 3)
+                this.ctx.globalAlpha = 1
+        }
+
+        renderMenuBackground() {
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height)
+                gradient.addColorStop(0, "#093565")
+                gradient.addColorStop(1, "#199779")
+                this.ctx.fillStyle = gradient
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+        }
+
+        drawButton(btn, text) {
+                this.ctx.fillStyle = "#199779"
+                this.ctx.fillRect(btn.x, btn.y, btn.width, btn.height)
+                this.ctx.strokeStyle = "#072a52"
+                this.ctx.lineWidth = 2
+                this.ctx.strokeRect(btn.x, btn.y, btn.width, btn.height)
+                this.ctx.fillStyle = "#FFF"
+                this.ctx.font = "20px Arial"
+                this.ctx.textAlign = "center"
+                this.ctx.textBaseline = "middle"
+                this.ctx.fillText(text, btn.x + btn.width / 2, btn.y + btn.height / 2)
+        }
+
+        isInsideButton(x, y, btn) {
+                return x >= btn.x && x <= btn.x + btn.width && y >= btn.y && y <= btn.y + btn.height
+        }
+
+        handleCanvasClick(e) {
+                const rect = this.canvas.getBoundingClientRect()
+                const x = e.clientX - rect.left
+                const y = e.clientY - rect.top
+
+                if (this.gameState === "menu") {
+                        if (this.isInsideButton(x, y, this.buttons.start)) return this.startGame()
+                        if (this.isInsideButton(x, y, this.buttons.instructions)) return this.showInstructions()
+                } else if (this.gameState === "instructions") {
+                        if (this.isInsideButton(x, y, this.buttons.back)) return this.showMainMenu()
+                } else if (this.gameState === "gameOver") {
+                        if (this.isInsideButton(x, y, this.buttons.restart)) return this.restartGame()
+                        if (this.isInsideButton(x, y, this.buttons.mainMenu)) return this.showMainMenu()
+                } else if (this.gameState === "playing") {
+                        this.handleJump()
+                }
+        }
+
+        renderMainMenu() {
+                this.renderMenuBackground()
+                this.ctx.fillStyle = "#FFF"
+                this.ctx.font = "48px Arial"
+                this.ctx.textAlign = "center"
+                this.ctx.fillText("FlappyHalcon", this.canvas.width / 2, 150)
+                this.ctx.font = "40px Arial"
+                this.ctx.fillText("🦅", this.canvas.width / 2, 210)
+                this.ctx.font = "18px Arial"
+                this.ctx.fillText("\"Con esfuerzo y alas, se llega lejos en la UTEZ\"", this.canvas.width / 2, 250)
+                this.drawButton(this.buttons.start, "Iniciar Juego")
+                this.drawButton(this.buttons.instructions, "Instrucciones")
+        }
+
+        renderInstructionsScreen() {
+                this.renderMenuBackground()
+                this.ctx.fillStyle = "#FFF"
+                this.ctx.font = "32px Arial"
+                this.ctx.textAlign = "center"
+                this.ctx.fillText("Instrucciones", this.canvas.width / 2, 80)
+                this.ctx.font = "16px Arial"
+                const lines = [
+                        "Objetivo: Ayuda al Halc\u00f3n UTEZ a volar entre las 'Docencias' y superar los obst\u00e1culos acad\u00e9micos.",
+                        "Controles: Presiona ESPACIO o clic para volar.",
+                        "Vidas: Tienes 3 vidas iniciales.",
+                        "Energ\u00eda: Consume energ\u00eda para volar m\u00e1s r\u00e1pido.",
+                        "Obst\u00e1culos: Evita ex\u00e1menes sorpresa, distracciones y tentaciones.",
+                        "Bonus: Recoge \u00edtems de motivaci\u00f3n y aprendizaje.",
+                ]
+                lines.forEach((line, i) => {
+                        this.ctx.fillText(line, this.canvas.width / 2, 120 + i * 30)
+                })
+                this.drawButton(this.buttons.back, "Volver")
+        }
+
+        renderGameOverScreen() {
+                this.renderMenuBackground()
+                this.ctx.fillStyle = "#FFF"
+                this.ctx.font = "40px Arial"
+                this.ctx.textAlign = "center"
+                this.ctx.fillText("\u00a1Fin del Juego!", this.canvas.width / 2, 150)
+                this.ctx.font = "20px Arial"
+                this.ctx.fillText(`Puntuaci\u00f3n Final: ${this.score}`, this.canvas.width / 2, 220)
+                this.ctx.fillText(`Nivel Alcanzado: ${this.level}`, this.canvas.width / 2, 250)
+                if (this.motivationalMessage) {
+                        this.ctx.fillStyle = "#20b887"
+                        this.ctx.fillText(this.motivationalMessage, this.canvas.width / 2, 300)
+                        this.ctx.fillStyle = "#FFF"
+                }
+                this.drawButton(this.buttons.restart, "Intentar de Nuevo")
+                this.drawButton(this.buttons.mainMenu, "Men\u00fa Principal")
+        }
 }
 
 // Inicializar el juego cuando se carga la página

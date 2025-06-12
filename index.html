@@ -4,42 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlappyHalcon - UTEZ</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
-        <!-- Menú Principal -->
-        <div id="mainMenu" class="menu">
-            <div class="menu-content">
-                <h1 class="game-title">FlappyHalcon</h1>
-                <div class="utez-logo">🦅</div>
-                <p class="slogan">"Con esfuerzo y alas, se llega lejos en la UTEZ"</p>
-                <button id="startBtn" class="menu-btn">Iniciar Juego</button>
-                <button id="instructionsBtn" class="menu-btn">Instrucciones</button>
-                <div class="utez-info">
-                    <p>Universidad Tecnológica de Emiliano Zapata</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Menú de Instrucciones -->
-        <div id="instructionsMenu" class="menu hidden">
-            <div class="menu-content">
-                <h2>Instrucciones</h2>
-                <div class="instructions">
-                    <p><strong>Objetivo:</strong> Ayuda al Halcón UTEZ a volar entre las "Docencias" y superar los obstáculos académicos.</p>
-                    <p><strong>Controles:</strong> Presiona ESPACIO o clic para volar</p>
-                    <p><strong>Vidas:</strong> Tienes 3 vidas iniciales</p>
-                    <p><strong>Energía:</strong> Consume energía para volar más rápido</p>
-                    <p><strong>Obstáculos:</strong> Evita exámenes sorpresa, distracciones y tentaciones</p>
-                    <p><strong>Bonus:</strong> Recoge ítems de motivación y aprendizaje</p>
-                </div>
-                <button id="backBtn" class="menu-btn">Volver</button>
-            </div>
-        </div>
-
         <!-- Canvas del Juego -->
-        <canvas id="gameCanvas" width="800" height="600" class="hidden"></canvas>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
 
         <!-- HUD del Juego -->
         <div id="gameHUD" class="hidden">
@@ -54,19 +24,6 @@
             </div>
         </div>
 
-        <!-- Menú Game Over -->
-        <div id="gameOverMenu" class="menu hidden">
-            <div class="menu-content">
-                <h2>¡Fin del Juego!</h2>
-                <div class="game-over-stats">
-                    <p>Puntuación Final: <span id="finalScore">0</span></p>
-                    <p>Nivel Alcanzado: <span id="finalLevel">1</span></p>
-                    <p id="motivationalMessage">¡El esfuerzo siempre da frutos en la UTEZ!</p>
-                </div>
-                <button id="restartBtn" class="menu-btn">Intentar de Nuevo</button>
-                <button id="mainMenuBtn" class="menu-btn">Menú Principal</button>
-            </div>
-        </div>
     </div>
 
     <script src="game.js"></script>
