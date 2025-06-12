@@ -1,222 +1,75 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>FlappyHalcon</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background-color: #199779;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #title {
-      color: white;
-      font-family: Arial, sans-serif;
-      margin: 10px 0;
-    }
-    canvas {
-      background: linear-gradient(#093565, #199779);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlappyHalcon - UTEZ</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1 id="title">Flappy Halcon</h1>
-  <canvas id="gameCanvas"></canvas>
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    <div id="gameContainer">
+        <!-- Menú Principal -->
+        <div id="mainMenu" class="menu">
+            <div class="menu-content">
+                <h1 class="game-title">FlappyHalcon</h1>
+                <div class="utez-logo">🦅</div>
+                <p class="slogan">"Con esfuerzo y alas, se llega lejos en la UTEZ"</p>
+                <button id="startBtn" class="menu-btn">Iniciar Juego</button>
+                <button id="instructionsBtn" class="menu-btn">Instrucciones</button>
+                <div class="utez-info">
+                    <p>Universidad Tecnológica de Emiliano Zapata</p>
+                </div>
+            </div>
+        </div>
 
-    function resizeCanvas() {
-      const titleHeight = document.getElementById('title').offsetHeight;
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - titleHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+        <!-- Menú de Instrucciones -->
+        <div id="instructionsMenu" class="menu hidden">
+            <div class="menu-content">
+                <h2>Instrucciones</h2>
+                <div class="instructions">
+                    <p><strong>Objetivo:</strong> Ayuda al Halcón UTEZ a volar entre las "Docencias" y superar los obstáculos académicos.</p>
+                    <p><strong>Controles:</strong> Presiona ESPACIO o clic para volar</p>
+                    <p><strong>Vidas:</strong> Tienes 3 vidas iniciales</p>
+                    <p><strong>Energía:</strong> Consume energía para volar más rápido</p>
+                    <p><strong>Obstáculos:</strong> Evita exámenes sorpresa, distracciones y tentaciones</p>
+                    <p><strong>Bonus:</strong> Recoge ítems de motivación y aprendizaje</p>
+                </div>
+                <button id="backBtn" class="menu-btn">Volver</button>
+            </div>
+        </div>
 
-    const MAX_LEVEL = 10;
-    const obstacleTypes = [
-      { color: '#FF5555', label: 'Examen' },
-      { color: '#999999', label: 'Celular' },
-      { color: '#F4A460', label: 'Cerveza' },
-      { color: '#9932CC', label: 'IA' }
-    ];
+        <!-- Canvas del Juego -->
+        <canvas id="gameCanvas" width="800" height="600" class="hidden"></canvas>
 
-    let halcon = {
-      x: 80,
-      y: 150,
-      width: 30,
-      height: 30,
-      gravity: 1.5,
-      lift: -20,
-      velocity: 0,
-      energy: 100,
-      lives: 3,
-      score: 0,
-    };
+        <!-- HUD del Juego -->
+        <div id="gameHUD" class="hidden">
+            <div class="hud-item">Puntos: <span id="score">0</span></div>
+            <div class="hud-item">Nivel: <span id="level">1</span></div>
+            <div class="hud-item">Vidas: <span id="lives">3</span></div>
+            <div class="hud-item">
+                Energía: 
+                <div class="energy-bar">
+                    <div id="energyFill" class="energy-fill"></div>
+                </div>
+            </div>
+        </div>
 
-    let obstacles = [];
-    let bonusItems = [];
-    let level = 1;
-    let frame = 0;
-    let isGameOver = false;
+        <!-- Menú Game Over -->
+        <div id="gameOverMenu" class="menu hidden">
+            <div class="menu-content">
+                <h2>¡Fin del Juego!</h2>
+                <div class="game-over-stats">
+                    <p>Puntuación Final: <span id="finalScore">0</span></p>
+                    <p>Nivel Alcanzado: <span id="finalLevel">1</span></p>
+                    <p id="motivationalMessage">¡El esfuerzo siempre da frutos en la UTEZ!</p>
+                </div>
+                <button id="restartBtn" class="menu-btn">Intentar de Nuevo</button>
+                <button id="mainMenuBtn" class="menu-btn">Menú Principal</button>
+            </div>
+        </div>
+    </div>
 
-    function drawHalcon() {
-      ctx.fillStyle = '#FFD700';
-      ctx.fillRect(halcon.x, halcon.y, halcon.width, halcon.height);
-    }
-
-    function drawObstacle(obstacle) {
-      ctx.fillStyle = obstacle.type.color;
-      ctx.fillRect(obstacle.x, 0, obstacle.width, obstacle.top);
-      ctx.fillRect(obstacle.x, canvas.height - obstacle.bottom, obstacle.width, obstacle.bottom);
-      ctx.fillStyle = 'white';
-      ctx.font = '12px Arial';
-      ctx.fillText(obstacle.type.label, obstacle.x + 5, obstacle.top - 5);
-    }
-
-    function drawBonus(bonus) {
-      ctx.fillStyle = '#00FF00';
-      ctx.beginPath();
-      ctx.arc(bonus.x, bonus.y, bonus.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawBuilding() {
-      ctx.fillStyle = '#093565';
-      ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillText('Docencias', 10, canvas.height - 10);
-    }
-
-    function update() {
-      if (isGameOver) return;
-
-      halcon.velocity += halcon.gravity;
-      halcon.y += halcon.velocity;
-
-      let baseSpeed = 2 + level * 0.5;
-      let boost = 0;
-      if (halcon.energy > 0 && keys['ArrowRight']) {
-        boost = 2;
-        halcon.energy -= 0.5;
-      } else {
-        halcon.energy = Math.min(100, halcon.energy + 0.1);
-      }
-
-      if ((keys[' '] || keys['ArrowUp']) && halcon.energy > 0) {
-        halcon.velocity = halcon.lift;
-        halcon.energy -= 1;
-      }
-
-      if (halcon.y + halcon.height > canvas.height || halcon.y < 0) {
-        loseLife();
-      }
-
-      if (frame % 100 === 0) {
-        let gap = 160 - level * 10;
-        if (gap < 80) gap = 80;
-        let topHeight = Math.floor(Math.random() * (canvas.height - gap - 100)) + 20;
-        let bottomHeight = canvas.height - topHeight - gap;
-        obstacles.push({
-          x: canvas.width,
-          width: 60,
-          top: topHeight,
-          bottom: bottomHeight,
-          type: obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
-        });
-      }
-
-      if (frame % 250 === 0) {
-        bonusItems.push({
-          x: canvas.width,
-          y: Math.random() * (canvas.height - 100) + 50,
-          radius: 10
-        });
-      }
-
-      obstacles.forEach((obstacle, index) => {
-        obstacle.x -= baseSpeed + boost;
-        if (
-          halcon.x < obstacle.x + obstacle.width &&
-          halcon.x + halcon.width > obstacle.x &&
-          (halcon.y < obstacle.top || halcon.y + halcon.height > canvas.height - obstacle.bottom)
-        ) {
-          loseLife();
-        }
-        if (obstacle.x + obstacle.width < 0) {
-          obstacles.splice(index, 1);
-          halcon.score++;
-          if (halcon.score % 5 === 0 && level < MAX_LEVEL) level++;
-        }
-      });
-
-      bonusItems.forEach((bonus, index) => {
-        bonus.x -= baseSpeed + boost;
-        if (
-          halcon.x < bonus.x + bonus.radius &&
-          halcon.x + halcon.width > bonus.x - bonus.radius &&
-          halcon.y < bonus.y + bonus.radius &&
-          halcon.y + halcon.height > bonus.y - bonus.radius
-        ) {
-          halcon.energy = Math.min(100, halcon.energy + 20);
-          halcon.lives = Math.min(5, halcon.lives + 1);
-          bonusItems.splice(index, 1);
-        }
-      });
-    }
-
-    function loseLife() {
-      halcon.lives--;
-      halcon.x = 80;
-      halcon.y = 150;
-      halcon.velocity = 0;
-      obstacles = [];
-      bonusItems = [];
-      if (halcon.lives <= 0) {
-        isGameOver = true;
-        alert('¡Game Over! Puntuación: ' + halcon.score);
-        location.reload();
-      }
-    }
-
-    function drawUI() {
-      ctx.fillStyle = 'white';
-      ctx.font = '16px Arial';
-      ctx.fillText('Vidas: ' + halcon.lives, 10, 20);
-      ctx.fillText('Energía: ' + Math.floor(halcon.energy), 10, 40);
-      ctx.fillText('Nivel: ' + level, 10, 60);
-      ctx.fillText('Puntos: ' + halcon.score, 10, 80);
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBuilding();
-      drawHalcon();
-      obstacles.forEach(drawObstacle);
-      bonusItems.forEach(drawBonus);
-      drawUI();
-    }
-
-    function gameLoop() {
-      update();
-      draw();
-      frame++;
-      requestAnimationFrame(gameLoop);
-    }
-
-    const keys = {};
-    window.addEventListener('keydown', e => {
-      keys[e.key] = true;
-    });
-    window.addEventListener('keyup', e => {
-      keys[e.key] = false;
-    });
-
-    gameLoop();
-  </script>
+    <script src="game.js"></script>
 </body>
 </html>
+
